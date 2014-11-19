@@ -32,7 +32,7 @@ func (c City) String() string {
 
 func main() {
 	cities, err := ReadCities("huehuehuehuehuehue")
-	p, err := permutation.NewPerm(cities, lessCity) //generate a Permutator
+	p, err := permutation.NewPerm(cities, lessCity)
 	if err != nil {
 		fmt.Println(err)
 		return

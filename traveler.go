@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"github.com/fighterlyt/permutation"
 	"math"
+	"math/rand"
+	"runtime"
+	"time"
 )
 
 type City struct {
@@ -29,8 +32,14 @@ func NewPath(c []*City, d float64) *Path {
 
 func ReadCities(path string) ([]*City, error) {
 	/* TODO: Leer las ciudades de un archivo o algo asi */
-	cities := []*City{NewCity("a", 15, 78), NewCity("b", 81, 92),
-		NewCity("c", 65, 3), NewCity("d", 31, 34)}
+	numCities := 5
+	cities := make([]*City, numCities)
+	for i := 0; i < numCities; i++ {
+		name := string(fmt.Sprintf("%d", i))
+		lat := rand.Intn(90) + 5
+		lon := rand.Intn(90) + 5
+		cities[i] = NewCity(name, lat, lon)
+	}
 	return cities, nil
 }
 
@@ -73,6 +82,19 @@ func BuildPath(cities []*City) *Path {
 	return NewPath(cities, totalDistance)
 }
 
+func ConcurrentBuildPath(paths chan *Path, cities []*City) {
+	go func() {
+		totalDistance := float64(0)
+		for i := 0; i < len(cities)-1; i++ {
+			from := cities[i]
+			to := cities[i+1]
+			distance := from.Distance(*to)
+			totalDistance += distance
+		}
+		paths <- NewPath(cities, totalDistance)
+	}()
+}
+
 func ExplorePaths(paths <-chan *Path) *Path {
 	var bestPath *Path
 	bestDistance := math.Inf(1)
@@ -96,6 +118,7 @@ func GeneratePaths(cities []*City) (<-chan *Path, error) {
 		for c, err := p.Next(); err == nil; c, err = p.Next() {
 			citiesPerm := c.([]*City)
 			out <- BuildPath(citiesPerm)
+			//ConcurrentBuildPath(out, citiesPerm)
 		}
 		close(out)
 	}()
@@ -103,16 +126,22 @@ func GeneratePaths(cities []*City) (<-chan *Path, error) {
 }
 
 func main() {
+	runtime.GOMAXPROCS(8)
+	rand.Seed(time.Now().UnixNano())
 	cities, err := ReadCities("huehuehuehuehuehue")
 	if err != nil {
 		fmt.Println("Error al leer ciudades: ", err)
 		return
 	}
+	start := time.Now()
 	out, err := GeneratePaths(cities)
 	if err != nil {
 		fmt.Println("Error al procesar caminos: ", err)
 		return
 	}
+
 	bestPath := ExplorePaths(out)
+	elapsed := time.Since(start)
+	fmt.Println("Recorrer todos los camimos", elapsed)
 	fmt.Println("Mejor camino:", bestPath)
 }

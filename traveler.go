@@ -33,7 +33,9 @@ func ReadCities(path string) ([]*City, error) {
 }
 
 func lessCity(i, j interface{}) bool {
-	return true // no importa el orden en el que devuelve las permutaciones
+	city1 := i.(*City)
+	city2 := j.(*City)
+	return bytes.Compare([]byte(city1.name), []byte(city2.name)) < 0
 }
 
 func (c City) String() string {

@@ -62,18 +62,6 @@ func (c City) Distance(other City) float64 {
 	return math.Sqrt(x*x + y*y)
 }
 
-func MinimumPath(paths []*Path) *Path {
-	var bestPath *Path
-	bestDistance := math.Inf(1)
-	for _, path := range paths {
-		if path.distance < bestDistance {
-			bestPath = path
-			bestDistance = path.distance
-		}
-	}
-	return bestPath
-}
-
 func BuildPath(cities []*City) *Path {
 	totalDistance := float64(0)
 	for i := 0; i < len(cities)-1; i++ {
@@ -85,26 +73,46 @@ func BuildPath(cities []*City) *Path {
 	return NewPath(cities, totalDistance)
 }
 
+func ExplorePaths(paths <-chan *Path) *Path {
+	var bestPath *Path
+	bestDistance := math.Inf(1)
+	for path := range paths {
+		if path.distance < bestDistance {
+			bestPath = path
+			bestDistance = path.distance
+		}
+	}
+	return bestPath
+}
+
+func GeneratePaths(cities []*City) (<-chan *Path, error) {
+	p, err := permutation.NewPerm(cities, lessCity)
+	if err != nil {
+		fmt.Println("Error al generar permutaciones: ", err)
+		return nil, err
+	}
+	out := make(chan *Path)
+	go func() {
+		for c, err := p.Next(); err == nil; c, err = p.Next() {
+			citiesPerm := c.([]*City)
+			out <- BuildPath(citiesPerm)
+		}
+		close(out)
+	}()
+	return out, nil
+}
+
 func main() {
 	cities, err := ReadCities("huehuehuehuehuehue")
 	if err != nil {
 		fmt.Println("Error al leer ciudades: ", err)
 		return
 	}
-	p, err := permutation.NewPerm(cities, lessCity)
+	out, err := GeneratePaths(cities)
 	if err != nil {
-		fmt.Println("Error al generar permutaciones: ", err)
+		fmt.Println("Error al procesar caminos: ", err)
 		return
 	}
-
-	paths := make([]*Path, p.Left())
-	for c, err := p.Next(); err == nil; c, err = p.Next() {
-		citiesPerm := c.([]*City)
-		paths[p.Index()-1] = BuildPath(citiesPerm)
-	}
-	for _, path := range paths {
-		fmt.Println("Path: ", path)
-	}
-	bestPath := MinimumPath(paths)
-	fmt.Println("Mejor camino: ", *bestPath)
+	bestPath := ExplorePaths(out)
+	fmt.Println("Mejor camino:", bestPath)
 }

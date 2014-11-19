@@ -15,6 +15,8 @@ type City struct {
 type Path struct {
 	cities   []*City
 	distance float64
+	best     bool
+	worst    bool
 }
 
 func NewCity(n string, x int, y int) *City {
@@ -22,7 +24,7 @@ func NewCity(n string, x int, y int) *City {
 }
 
 func NewPath(c []*City, d float64) *Path {
-	return &Path{cities: c, distance: d}
+	return &Path{cities: c, distance: d, best: false, worst: false}
 }
 
 func ReadCities(path string) ([]*City, error) {
@@ -60,29 +62,49 @@ func (c City) Distance(other City) float64 {
 	return math.Sqrt(x*x + y*y)
 }
 
+func MinimumPath(paths []*Path) *Path {
+	var bestPath *Path
+	bestDistance := math.Inf(1)
+	for _, path := range paths {
+		if path.distance < bestDistance {
+			bestPath = path
+			bestDistance = path.distance
+		}
+	}
+	return bestPath
+}
+
+func BuildPath(cities []*City) *Path {
+	totalDistance := float64(0)
+	for i := 0; i < len(cities)-1; i++ {
+		from := cities[i]
+		to := cities[i+1]
+		distance := from.Distance(*to)
+		totalDistance += distance
+	}
+	return NewPath(cities, totalDistance)
+}
+
 func main() {
 	cities, err := ReadCities("huehuehuehuehuehue")
+	if err != nil {
+		fmt.Println("Error al leer ciudades: ", err)
+		return
+	}
 	p, err := permutation.NewPerm(cities, lessCity)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error al generar permutaciones: ", err)
 		return
 	}
 
-	paths := make([]Path, p.Left())
+	paths := make([]*Path, p.Left())
 	for c, err := p.Next(); err == nil; c, err = p.Next() {
-		citiesPermutation := c.([]*City)
-		totalDistance := float64(0)
-		for i := 0; i < len(citiesPermutation)-1; i++ {
-			from := citiesPermutation[i]
-			to := citiesPermutation[i+1]
-			distance := from.Distance(*to)
-			//fmt.Println("de ", from, " a ", to, " = ", distance)
-			totalDistance += distance
-		}
-		paths[p.Index()-1] = *NewPath(citiesPermutation, totalDistance)
-		//fmt.Printf("permutation: %d left %d\n", p.Index()-1, p.Left())
+		citiesPerm := c.([]*City)
+		paths[p.Index()-1] = BuildPath(citiesPerm)
 	}
 	for _, path := range paths {
 		fmt.Println("Path: ", path)
 	}
+	bestPath := MinimumPath(paths)
+	fmt.Println("Mejor camino: ", *bestPath)
 }

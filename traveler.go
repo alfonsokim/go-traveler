@@ -126,7 +126,7 @@ func GeneratePaths(cities []*City) (<-chan *Path, error) {
 }
 
 func main() {
-	runtime.GOMAXPROCS(8)
+	runtime.GOMAXPROCS(2)
 	rand.Seed(time.Now().UnixNano())
 	cities, err := ReadCities("huehuehuehuehuehue")
 	if err != nil {

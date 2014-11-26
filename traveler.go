@@ -101,22 +101,23 @@ func SimplePathExplore(cities []*City) *Path {
 	numPaths := factorial(len(cities))
 	paths := make([]*Path, numPaths)
 
-	sem := make(chan int, numPaths)
+	semaphore := make(chan int, numPaths) // semaforo para notificar que los procesos terminaron
 
 	i := 0
 	for c, err := p.Next(); err == nil; c, err = p.Next() {
 		cities := c.([]*City)
 		go func(i int) {
 			paths[i] = BuildPath(cities)
-			sem <- 1
+			semaphore <- 1 // Notificar al semaforo que esta rutina ya acabo
 		}(i)
 		i++
 	}
 
 	for i := 0; i < numPaths; i++ {
-		<-sem
+		<-semaphore // Esperar por todos los procesos
 	}
 
+	// Encontrar el mejor camino
 	var bestPath *Path
 	bestDistance := math.Inf(1)
 	for _, path := range paths {

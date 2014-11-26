@@ -130,7 +130,7 @@ func SimplePathExplore(cities []*City) *Path {
 }
 
 func main() {
-	runtime.GOMAXPROCS(1)
+	runtime.GOMAXPROCS(4)
 	//rand.Seed(time.Now().UnixNano())
 	cities, err := ReadCities("huehuehuehuehuehue")
 	if err != nil {

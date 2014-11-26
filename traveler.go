@@ -164,6 +164,52 @@ func ConcurrentExplorePaths(paths <-chan []*City) <-chan *Path {
 	return out
 }
 
+func factorial(i int) int {
+	result := 1
+	for i > 0 {
+		result *= i
+		i--
+	}
+	return result
+}
+
+func SimplePathExplore(cities []*City) *Path {
+	p, err := permutation.NewPerm(cities, lessCity)
+	if err != nil {
+		fmt.Println("Error al generar permutaciones: ", err)
+		return nil
+	}
+
+	numPaths := factorial(len(cities))
+	paths := make([]*Path, numPaths)
+
+	sem := make(chan int, numPaths)
+
+	i := 0
+	for c, err := p.Next(); err == nil; c, err = p.Next() {
+		cities := c.([]*City)
+		go func(i int) {
+			paths[i] = BuildPath(cities)
+			sem <- 1
+		}(i)
+		i++
+	}
+
+	for i := 0; i < numPaths; i++ {
+		<-sem
+	}
+
+	var bestPath *Path
+	bestDistance := math.Inf(1)
+	for _, path := range paths {
+		if path.distance < bestDistance {
+			bestPath = path
+			bestDistance = path.distance
+		}
+	}
+	return bestPath
+}
+
 func main() {
 	runtime.GOMAXPROCS(1)
 	//rand.Seed(time.Now().UnixNano())
@@ -173,11 +219,14 @@ func main() {
 		return
 	}
 	start := time.Now()
+	/*
+		citiesChan, _ := ConcurrentGeneratePaths(cities)
+		pathsChan := ConcurrentExplorePaths(citiesChan)
 
-	citiesChan, _ := ConcurrentGeneratePaths(cities)
-	pathsChan := ConcurrentExplorePaths(citiesChan)
+		bestPath := ExplorePaths(pathsChan)
+	*/
 
-	bestPath := ExplorePaths(pathsChan)
+	bestPath := SimplePathExplore(cities)
 
 	elapsed := time.Since(start)
 	fmt.Println("Recorrer todos los camimos", elapsed)

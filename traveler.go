@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/GaryBoone/GoStats/stats"
 	"github.com/fighterlyt/permutation"
 	"math"
 	"math/rand"
@@ -137,11 +138,17 @@ func main() {
 		fmt.Println("Error al leer ciudades: ", err)
 		return
 	}
-	start := time.Now()
 
-	bestPath := SimplePathExplore(cities)
-
-	elapsed := time.Since(start)
-	fmt.Println("Recorrer todos los camimos", elapsed)
-	fmt.Println("Mejor camino:", bestPath)
+	var statsBuffer stats.Stats
+	goProcs := []int{8, 4, 2, 1}
+	for _, goProc := range goProcs {
+		runtime.GOMAXPROCS(goProc)
+		for i := 0; i < 1000; i++ {
+			start := time.Now()
+			SimplePathExplore(cities)
+			elapsed := time.Since(start)
+			statsBuffer.Update(elapsed.Seconds())
+		}
+		fmt.Println("goProc:", goProc, ",promedio:", statsBuffer.Mean(), ",desviacion:", statsBuffer.SampleStandardDeviation())
+	}
 }

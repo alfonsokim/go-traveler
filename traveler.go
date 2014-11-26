@@ -95,6 +95,17 @@ func ConcurrentBuildPath(paths chan *Path, cities []*City) {
 	}()
 }
 
+func SequentialBuildPath(paths chan *Path, cities []*City) {
+	totalDistance := float64(0)
+	for i := 0; i < len(cities)-1; i++ {
+		from := cities[i]
+		to := cities[i+1]
+		distance := from.Distance(*to)
+		totalDistance += distance
+	}
+	paths <- NewPath(cities, totalDistance)
+}
+
 func ExplorePaths(paths <-chan *Path) *Path {
 	var bestPath *Path
 	bestDistance := math.Inf(1)
@@ -118,29 +129,56 @@ func GeneratePaths(cities []*City) (<-chan *Path, error) {
 		for c, err := p.Next(); err == nil; c, err = p.Next() {
 			citiesPerm := c.([]*City)
 			out <- BuildPath(citiesPerm)
-			//ConcurrentBuildPath(out, citiesPerm)
 		}
 		close(out)
 	}()
 	return out, nil
 }
 
+func ConcurrentGeneratePaths(cities []*City) (<-chan []*City, error) {
+	p, err := permutation.NewPerm(cities, lessCity)
+	if err != nil {
+		fmt.Println("Error al generar permutaciones: ", err)
+		return nil, err
+	}
+	out := make(chan []*City)
+	go func() {
+		for c, err := p.Next(); err == nil; c, err = p.Next() {
+			//go func(out chan []*City, c interface{}) {
+			out <- c.([]*City)
+			//}(out, c)
+		}
+		close(out)
+	}()
+	return out, nil
+}
+
+func ConcurrentExplorePaths(paths <-chan []*City) <-chan *Path {
+	out := make(chan *Path)
+	go func() {
+		for path := range paths {
+			out <- BuildPath(path)
+		}
+		close(out)
+	}()
+	return out
+}
+
 func main() {
-	runtime.GOMAXPROCS(2)
-	rand.Seed(time.Now().UnixNano())
+	runtime.GOMAXPROCS(1)
+	//rand.Seed(time.Now().UnixNano())
 	cities, err := ReadCities("huehuehuehuehuehue")
 	if err != nil {
 		fmt.Println("Error al leer ciudades: ", err)
 		return
 	}
 	start := time.Now()
-	out, err := GeneratePaths(cities)
-	if err != nil {
-		fmt.Println("Error al procesar caminos: ", err)
-		return
-	}
 
-	bestPath := ExplorePaths(out)
+	citiesChan, _ := ConcurrentGeneratePaths(cities)
+	pathsChan := ConcurrentExplorePaths(citiesChan)
+
+	bestPath := ExplorePaths(pathsChan)
+
 	elapsed := time.Since(start)
 	fmt.Println("Recorrer todos los camimos", elapsed)
 	fmt.Println("Mejor camino:", bestPath)

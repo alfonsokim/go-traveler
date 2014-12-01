@@ -33,7 +33,7 @@ func NewPath(c []*City, d float64) *Path {
 
 func ReadCities(path string) ([]*City, error) {
 	/* TODO: Leer las ciudades de un archivo o algo asi */
-	numCities := 5
+	numCities := 7
 	cities := make([]*City, numCities)
 	for i := 0; i < numCities; i++ {
 		name := string(fmt.Sprintf("%d", i))
@@ -72,6 +72,11 @@ func (c City) Distance(other City) float64 {
 	return math.Sqrt(x*x + y*y)
 }
 
+func CopyPath(path *Path) *Path {
+	newCities := make([]*City, len(path.cities))
+	return NewPath(newCities, path.distance)
+}
+
 func BuildPath(cities []*City) *Path {
 	totalDistance := float64(0)
 	for i := 0; i < len(cities)-1; i++ {
@@ -103,6 +108,7 @@ func SimplePathExplore(cities []*City) *Path {
 	paths := make([]*Path, numPaths)
 
 	semaphore := make(chan int, numPaths) // semaforo para notificar que los procesos terminaron
+	defer close(semaphore)
 
 	i := 0
 	for c, err := p.Next(); err == nil; c, err = p.Next() {
@@ -123,15 +129,17 @@ func SimplePathExplore(cities []*City) *Path {
 	bestDistance := math.Inf(1)
 	for _, path := range paths {
 		if path.distance < bestDistance {
-			bestPath = path
+			bestPath = CopyPath(path)
 			bestDistance = path.distance
+			path.cities = nil
 		}
+		path = nil
 	}
+	paths = nil
 	return bestPath
 }
 
 func main() {
-	runtime.GOMAXPROCS(4)
 	//rand.Seed(time.Now().UnixNano())
 	cities, err := ReadCities("huehuehuehuehuehue")
 	if err != nil {
@@ -139,9 +147,9 @@ func main() {
 		return
 	}
 
-	var statsBuffer stats.Stats
 	goProcs := []int{8, 4, 2, 1}
 	for _, goProc := range goProcs {
+		var statsBuffer stats.Stats
 		runtime.GOMAXPROCS(goProc)
 		for i := 0; i < 1000; i++ {
 			start := time.Now()
@@ -152,3 +160,5 @@ func main() {
 		fmt.Println("goProc:", goProc, ",promedio:", statsBuffer.Mean(), ",desviacion:", statsBuffer.SampleStandardDeviation())
 	}
 }
+
+

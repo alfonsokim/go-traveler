@@ -1,0 +1,26 @@
+7 Ciudades
+ubuntu@ip-172-31-32-49:~/algoritmos/go$ go run traveler.go 
+goProc: 32 ,promedio: 0.012100781891000017 ,desviacion: 0.0017736786087044062
+goProc: 16 ,promedio: 0.011932749666000006 ,desviacion: 0.0017200932071486537
+goProc: 8 ,promedio: 0.011865298489999995 ,desviacion: 0.0016667083574851457
+goProc: 4 ,promedio: 0.011850209521 ,desviacion: 0.001814146607770423
+goProc: 2 ,promedio: 0.013613856403999985 ,desviacion: 0.001373845974052519
+goProc: 1 ,promedio: 0.017782218408999965 ,desviacion: 0.003016710165150315
+
+8 Ciudades
+ubuntu@ip-172-31-32-49:~/algoritmos/go$ go run traveler.go 
+goProc: 32 ,promedio: 0.0983280842779999 ,desviacion: 0.008646281947135135
+goProc: 16 ,promedio: 0.09727196229199989 ,desviacion: 0.008737588852594243
+goProc: 8 ,promedio: 0.09590258271099998 ,desviacion: 0.008358387419452356
+goProc: 4 ,promedio: 0.09978678795199997 ,desviacion: 0.010754138832971867
+goProc: 2 ,promedio: 0.11426831698899999 ,desviacion: 0.006321329007946459
+goProc: 1 ,promedio: 0.16414895886900013 ,desviacion: 0.028391176669155454
+
+9 Ciudades
+ubuntu@ip-172-31-32-49:~/algoritmos/go$ go run traveler.go 
+goProc: 32 ,promedio: 0.9307257934199994 ,desviacion: 0.04839580878852651
+goProc: 16 ,promedio: 0.9176516019680001 ,desviacion: 0.04856938373485007
+goProc: 8 ,promedio: 0.9305212013370006 ,desviacion: 0.04235190566715204
+goProc: 4 ,promedio: 0.9151376359520002 ,desviacion: 0.06581957950963875
+goProc: 2 ,promedio: 1.0577997565260002 ,desviacion: 0.0575320862212947
+goProc: 1 ,promedio: 1.658076656481 ,desviacion: 0.3583293982000443

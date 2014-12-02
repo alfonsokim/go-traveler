@@ -35,3 +35,35 @@ goProc: 8 ,promedio: 9.068981496540008 ,desviacion: 0.31463348806212327
 goProc: 4 ,promedio: 11.19471335590002 ,desviacion: 0.2611826765537339
 goProc: 2 ,promedio: 10.29398274960002 ,desviacion: 0.359887236001220
 goProc: 1 ,promedio: 13.142476466662 ,desviacion: 0.3224356343234477
+
+
+CUDA
+
+ubuntu@ip-172-31-32-49:~/algoritmos/cuda/codigo$ nvidia-smi
+Tue Dec  2 22:56:26 2014       
++------------------------------------------------------+                       
+| NVIDIA-SMI 340.29     Driver Version: 340.29         |                       
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|===============================+======================+======================|
+|   0  GRID K520           Off  | 0000:00:03.0     Off |                  N/A |
+| N/A   61C    P0    48W / 125W |     52MiB /  4095MiB |    100%      Default |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Compute processes:                                               GPU Memory |
+|  GPU       PID  Process name                                     Usage      |
+|=============================================================================|
+|    0      5147  ./traveler                                            39MiB |
++-----------------------------------------------------------------------------+
+
+5: Tiempo de Ejecucion: 0.385984 mSeg
+6: Tiempo de Ejecucion: 2.074368 mSeg
+7: Tiempo de Ejecucion: 14.217312 mSeg
+8: Tiempo de Ejecucion: 113.577789 mSeg
+9: Tiempo de Ejecucion: 842.286682 mSeg
+10: Tiempo de Ejecucion: 8422.416992 mSeg
+11: Tiempo de Ejecucion: 92646.171875 mSeg
+
+

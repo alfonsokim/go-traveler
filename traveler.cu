@@ -2,6 +2,7 @@
 
 struct City {
     int x, y;
+    char name;
 };
 
 inline void GPUassert(cudaError_t code, char * file, int line, bool Abort=true)
@@ -14,7 +15,7 @@ inline void GPUassert(cudaError_t code, char * file, int line, bool Abort=true)
 
 #define GPUerrchk(ans) { GPUassert((ans), __FILE__, __LINE__); }
 
-#define NUMCITIES 10
+#define NUMCITIES 9
 #define CITYSIZE sizeof(struct City)
 // #define CITYSIZE 1
 
@@ -51,46 +52,42 @@ __device__ void shortest_path(struct City *path){
     }
 }
 
-__device__ void permutations_kernel(struct City *a, int i, int length, int tid) { 
+__device__ void print_path(struct City *path){
+    for(int i = 0; i < NUMCITIES; i++){
+        printf("%c>", path[i].name);
+    }
+    printf("\n");
+}
+
+__device__ void format_path(struct City *path, char *str){
+    for(int i = 0; i < NUMCITIES; i++){
+        *str = path[i].name;        
+        str++;
+        *str = '>';
+        str++;
+    }
+    str--; *str = 0;
+}
+
+__device__ void permutations_kernel(struct City *a, char **paths, double *distances, int i, int length, int tid, int *count) { 
 
     if (length == i){
         long distance = total_distance(a);
+        //format_path(a, paths[count[0]]);
+        count[0] = count[0] + 1;
     } else {
         for (int j = i; j < length; j++) {
             swap(a, i, j);
             // CUDA
             // permutations(a, i+1, length, tid, count);
-            permutations_kernel(a, i+1, length, tid);
+            permutations_kernel(a, paths, distances, i+1, length, tid, count);
             swap(a, i, j);
         }
     }
 }
 
-/*
-__device__ void permute_device(int *a, int i, int n, int tid, int* count) {
-    if (i == n) { 
-        //int* perm = a - 1; 
-        //printf("Permutation nr. %i from thread nr. %i", count[0], tid);
-        printArray(a, 10);
-        printf("\n");
-        int* result = a - 1; 
-        int distance = 0;
-        for(int i = 0; i < NUMPATHS-1; i++){
-            distance += result[i];
-        }
-        printf("Permutation nr. %i from thread nr. %i distance = %i\n", count[0], tid, distance);
-        count[0] = count[0] + 1; 
-    } else {
-        for (int j = i; j <= n; j++) {
-            swap((a+i), (a+j));
-            permute_device(a, i+1, n, tid, count);
-            swap((a+i), (a+j)); //backtrack
-        }
-    }
-} 
-*/
 
-__global__ void permute_kernel(struct City *dev_cities, int size) {
+__global__ void permute_kernel(struct City *dev_cities, char **paths, double *distances, int size) {
 
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     int count[1]; 
@@ -104,17 +101,35 @@ __global__ void permute_kernel(struct City *dev_cities, int size) {
 
     //swap(local_array + threadIdx.x, local_array);
     //swap(local_array, threadIdx.x, 0);
-    permutations_kernel(local_array, 0, NUMCITIES, tid);
+    permutations_kernel(local_array, paths, distances, 0, NUMCITIES, tid, count);
 
+}
+
+long factorial(int i) {
+    long result = 1;
+    while(i > 0) {		
+        result *= i;
+	i--;
+    }
+    return result;
 }
 
 int main(){
 
     struct City host_cities[NUMCITIES];
     for(int c = 0; c < NUMCITIES; c++){
+        host_cities[c].name = 'A' + c;
         host_cities[c].x = rand() % 20 + 5;
         host_cities[c].y = rand() % 20 + 5;
     }
+
+    //char host_paths [ factorial(NUMCITIES) ][ NUMCITIES*NUMCITIES ];
+    char host_paths [0][0]; 
+    char **device_paths;
+
+    //double host_distances[ factorial(NUMCITIES) ];
+    double host_distances[0];
+    double *device_distances;
 
     float time;
     cudaEvent_t start, stop;
@@ -122,11 +137,18 @@ int main(){
     cudaEventCreate(&stop);
 
     struct City *device_cities; 
-    cudaMalloc((void**)&device_cities, sizeof(host_cities));
+    cudaMalloc((void**) &device_cities, sizeof(host_cities));
+    //cudaMalloc((void**) &device_paths, sizeof(host_paths));
+    cudaMalloc((void**) &device_paths, sizeof(char) * NUMCITIES * NUMCITIES * factorial(NUMCITIES));
+    cudaMalloc((void**) &device_distances, sizeof(host_distances));
+
+    GPUerrchk(cudaMemcpy(device_distances, host_distances, sizeof(host_distances), cudaMemcpyHostToDevice));
     GPUerrchk(cudaMemcpy(device_cities, host_cities, sizeof(host_cities), cudaMemcpyHostToDevice));
+    //GPUerrchk(cudaMemcpy(device_paths, host_paths, sizeof(host_paths), cudaMemcpyHostToDevice));
+    GPUerrchk(cudaMemcpy(device_paths, host_paths, sizeof(char) * NUMCITIES * NUMCITIES * factorial(NUMCITIES), cudaMemcpyHostToDevice));   
 
     cudaEventRecord(start,0);
-    permute_kernel<<<1, NUMCITIES>>>(device_cities, NUMCITIES);
+    permute_kernel<<<1, NUMCITIES>>>(device_cities, device_paths, device_distances, NUMCITIES);
     cudaEventRecord(stop,0);
 
     GPUerrchk(cudaPeekAtLastError());

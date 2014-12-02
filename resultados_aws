@@ -24,3 +24,12 @@ goProc: 8 ,promedio: 0.9305212013370006 ,desviacion: 0.04235190566715204
 goProc: 4 ,promedio: 0.9151376359520002 ,desviacion: 0.06581957950963875
 goProc: 2 ,promedio: 1.0577997565260002 ,desviacion: 0.0575320862212947
 goProc: 1 ,promedio: 1.658076656481 ,desviacion: 0.3583293982000443
+
+10 Ciudades
+ubuntu@ip-172-31-32-49:~/algoritmos/go$ go run traveler.go 
+goProc: 32 ,promedio: 9.425364199399993 ,desviacion: 0.2771824537988313
+goProc: 16 ,promedio: 9.272612708700002 ,desviacion: 0.2701388632256896
+goProc: 8 ,promedio: 9.068981496540008 ,desviacion: 0.31463348806212327
+goProc: 4 ,promedio: 11.19471335590002 ,desviacion: 0.2611826765537339
+goProc: 2 ,promedio: 10.29398274960002 ,desviacion: 0.359887236001220
+goProc: 1 ,promedio: 13.142476466662 ,desviacion: 0.3224356343234477

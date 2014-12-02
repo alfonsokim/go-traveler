@@ -147,7 +147,8 @@ func main() {
 		return
 	}
 
-	goProcs := []int{8, 4, 2, 1}
+	//goProcs := []int{8, 4, 2, 1}
+	goProcs := []int{1}
 	for _, goProc := range goProcs {
 		var statsBuffer stats.Stats
 		runtime.GOMAXPROCS(goProc)
@@ -160,5 +161,3 @@ func main() {
 		fmt.Println("goProc:", goProc, ",promedio:", statsBuffer.Mean(), ",desviacion:", statsBuffer.SampleStandardDeviation())
 	}
 }
-
-

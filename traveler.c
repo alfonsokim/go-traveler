@@ -1,31 +1,49 @@
 #include <stdio.h>
+//#include <time.h>
+#include <stdlib.h>
+
+#define NUMCITIES 4
+
+struct City {
+    int x, y;
+};
+
+#define CITYSIZE sizeof(struct City)
+// #define CITYSIZE 1
 
 void printArray(int *, int);
 
-void swap (int *x, int *y){
-    int temp;
+void swap (struct City *x, struct City *y){
+    struct City temp;
     temp = *x;
     *x = *y;
     *y = temp;
 }
 
-void permutations(int *a, int i, int length) { 
+void swapCity (struct City *a, int x, int y){
+    struct City temp;
+    temp = a[x];
+    a[x] = a[y];
+    a[y] = temp;
+}
+
+void permutations(struct City *a, int i, int length) { 
 
     if (length == i){
-        int distance = 0;
-        for (int j = 0; j < length; j++) {
-            distance += a[j];
+        printf("====================================\n");
+        for(int c = 0; c < length; c++){
+            //printf("[x=%i, y=%i]\n", a[c].x, a[c].y);
         }
-        a[length + 1] = distance;
-        return;
-    }
-    int j = i;
-    for (int j = i; j <= length; j++) {
-        swap((a+i), (a+j));
-        // CUDA
-        // permutations(a, i+1, length, tid, count);
-        permutations(a, i+1, length);
-        swap((a+i), (a+j)); 
+    } else {
+        for (int j = i; j < length; j++) {
+            //swap((a + (i * CITYSIZE)), (a + (j * CITYSIZE)));
+            swapCity(a, i, j);
+            // CUDA
+            // permutations(a, i+1, length, tid, count);
+            permutations(a, i+1, length);
+            //swap((a + (i * CITYSIZE)), (a + (j * CITYSIZE))); 
+            swapCity(a, i, j);
+        }
     }
 }
 
@@ -33,23 +51,23 @@ void printArray(int *a, int lenght){
     for(int i = 0; i < lenght; i++){
         printf("%i, ", a[i] );
     }
-    //printf("\n");
+}
+
+void printCity(struct City c){
+    printf("[x=%i, y=%i]\n", c.x, c.y);
 }
 
 int main(){
 
-    int a[4][5] = {  
-        { 20, 5, 13, 9, 0 },
-        { 16, 19, 11, 7, 0 },
-        { 13, 13, 8, 11, 0 },
-        { 5, 10, 5, 6, 0 },
-    };
+    //srand(time(NULL));
+    struct City cities[NUMCITIES];
+    for(int c = 0; c < NUMCITIES; c++){
+        cities[c].x = rand() % 20 + 5;
+        cities[c].y = rand() % 20 + 5;
+        printCity(cities[c]);
+    }
 
-    int test[5] = { 20, 5, 13, 9, 0 };
-
-    permutations(test, 0, 4);
-    printArray(test, 5);
-    printf("\n");
+    permutations(&cities, 0, NUMCITIES);
 
     return 0;
 

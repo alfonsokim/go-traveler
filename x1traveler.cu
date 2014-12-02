@@ -1,9 +1,5 @@
 #include <stdio.h>
 
-struct City {
-    int x, y;
-};
-
 inline void GPUassert(cudaError_t code, char * file, int line, bool Abort=true)
 {
     if (code != 0) {

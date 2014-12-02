@@ -2,25 +2,17 @@
 //#include <time.h>
 #include <stdlib.h>
 
-#define NUMCITIES 4
-
 struct City {
     int x, y;
 };
 
+#define NUMCITIES 5
 #define CITYSIZE sizeof(struct City)
 // #define CITYSIZE 1
 
 void printArray(int *, int);
 
-void swap (struct City *x, struct City *y){
-    struct City temp;
-    temp = *x;
-    *x = *y;
-    *y = temp;
-}
-
-void swapCity (struct City *a, int x, int y){
+void swap(struct City *a, int x, int y){
     struct City temp;
     temp = a[x];
     a[x] = a[y];
@@ -36,13 +28,11 @@ void permutations(struct City *a, int i, int length) {
         }
     } else {
         for (int j = i; j < length; j++) {
-            //swap((a + (i * CITYSIZE)), (a + (j * CITYSIZE)));
-            swapCity(a, i, j);
+            swap(a, i, j);
             // CUDA
             // permutations(a, i+1, length, tid, count);
             permutations(a, i+1, length);
-            //swap((a + (i * CITYSIZE)), (a + (j * CITYSIZE))); 
-            swapCity(a, i, j);
+            swap(a, i, j);
         }
     }
 }
@@ -64,7 +54,6 @@ int main(){
     for(int c = 0; c < NUMCITIES; c++){
         cities[c].x = rand() % 20 + 5;
         cities[c].y = rand() % 20 + 5;
-        printCity(cities[c]);
     }
 
     permutations(&cities, 0, NUMCITIES);

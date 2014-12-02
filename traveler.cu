@@ -13,21 +13,60 @@ inline void GPUassert(cudaError_t code, char * file, int line, bool Abort=true)
 }
 
 #define GPUerrchk(ans) { GPUassert((ans), __FILE__, __LINE__); }
-#define NUMPATHS 10
 
-__host__ __device__ void printArray(int *a, int lenght){
-    for(int i = 0; i < lenght; i++){
-        printf("%i, ", a[i]);
+#define NUMCITIES 10
+#define CITYSIZE sizeof(struct City)
+// #define CITYSIZE 1
+
+
+__host__ __device__ void printCity(struct City c){
+    printf("[x=%i, y=%i]\n", c.x, c.y);
+}
+
+__host__ __device__ void swap(struct City *a, int x, int y){
+    struct City temp;
+    temp = a[x];
+    a[x] = a[y];
+    a[y] = temp;
+}
+
+__device__ double get_distance(struct City c1, struct City c2){
+    double x = double(c1.x - c2.x);
+    double y = double(c1.y - c2.y);
+    return sqrt((x*x) + (y*y));
+}
+
+__device__ long total_distance(struct City *path){
+    long distance = 0;
+    for(int i = 0; i < NUMCITIES - 1; i++){
+        distance += get_distance(path[i], path[i+1]);
+    }
+    return (long)distance;
+}
+
+__device__ void shortest_path(struct City *path){
+    int best_path_idx = 0;
+    for(int i = 0; i < NUMCITIES - 1; i++){
+        printCity(path[i]);
     }
 }
 
-__host__ __device__ void swap(int *x, int *y){
-    int temp;
-    temp = *x;
-    *x = *y;
-    *y = temp;
+__device__ void permutations_kernel(struct City *a, int i, int length, int tid) { 
+
+    if (length == i){
+        long distance = total_distance(a);
+    } else {
+        for (int j = i; j < length; j++) {
+            swap(a, i, j);
+            // CUDA
+            // permutations(a, i+1, length, tid, count);
+            permutations_kernel(a, i+1, length, tid);
+            swap(a, i, j);
+        }
+    }
 }
 
+/*
 __device__ void permute_device(int *a, int i, int n, int tid, int* count) {
     if (i == n) { 
         //int* perm = a - 1; 
@@ -49,48 +88,59 @@ __device__ void permute_device(int *a, int i, int n, int tid, int* count) {
         }
     }
 } 
+*/
 
-__global__ void permute_kernel(int* d_A, int size) {
+__global__ void permute_kernel(struct City *dev_cities, int size) {
 
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     int count[1]; 
     count[0] = 0;
 
-    int local_array[10];
+    struct City local_array[NUMCITIES];
 
     for (int i=0; i<size; i++){
-        local_array[i] = d_A[i];  
+        local_array[i] = dev_cities[i];  
     } 
 
-    swap(local_array + threadIdx.x, local_array);
-    permute_device(local_array+1, 0, 5, tid, count);
+    //swap(local_array + threadIdx.x, local_array);
+    //swap(local_array, threadIdx.x, 0);
+    permutations_kernel(local_array, 0, NUMCITIES, tid);
 
-}
-
-int factorial(int i) {
-    int result = 1;
-    while(i > 0){
-        result *= i;
-        i--;
-    }
-    return result;
 }
 
 int main(){
 
-    int h_a[10] = { 20, 5, 14, 9, 16, 19, 11, 7, 13, 2 };
+    struct City host_cities[NUMCITIES];
+    for(int c = 0; c < NUMCITIES; c++){
+        host_cities[c].x = rand() % 20 + 5;
+        host_cities[c].y = rand() % 20 + 5;
+    }
 
-    int* d_a; 
-    cudaMalloc((void**)&d_a, sizeof(h_a));
+    float time;
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start); 
+    cudaEventCreate(&stop);
 
-    GPUerrchk(cudaMemcpy(d_a, h_a, sizeof(h_a), cudaMemcpyHostToDevice));
+    struct City *device_cities; 
+    cudaMalloc((void**)&device_cities, sizeof(host_cities));
+    GPUerrchk(cudaMemcpy(device_cities, host_cities, sizeof(host_cities), cudaMemcpyHostToDevice));
 
-    printf("\n\n Permutations on GPU\n");
-    permute_kernel<<<1,10>>>(d_a, 10);
+    cudaEventRecord(start,0);
+    permute_kernel<<<1, NUMCITIES>>>(device_cities, NUMCITIES);
+    cudaEventRecord(stop,0);
+
     GPUerrchk(cudaPeekAtLastError());
     GPUerrchk(cudaDeviceSynchronize());
 
-    getchar();
+    cudaEventElapsedTime( &time, start, stop );
+    printf("\nTiempo de Ejecucion: %f mSeg\n\n", time);
+
+    cudaEventDestroy( start );
+    cudaEventDestroy( stop );
+
+    cudaFree(device_cities);
+
     return 0;
 }
+
 

@@ -1,3 +1,5 @@
+http://stackoverflow.com/questions/19945347/generating-permutations-with-cuda
+
 7 Ciudades
 ubuntu@ip-172-31-32-49:~/algoritmos/go$ go run traveler.go 
 goProc: 32 ,promedio: 0.012100781891000017 ,desviacion: 0.0017736786087044062
